@@ -14,18 +14,51 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.exampleproject.data.model.Task
 
 @Composable
 fun HomeScreen() {
+
+    // Sample task data
+    val tasks = remember {
+        mutableStateListOf(
+            Task(
+                id = 1,
+                title = "Complete Android Assignment",
+                description = "Finish the mobile development assignment",
+                category = "Assignment"
+            ),
+            Task(
+                id = 2,
+                title = "Study Database Management",
+                description = "Review database lecture notes",
+                category = "Study"
+            ),
+            Task(
+                id = 3,
+                title = "Review Kotlin Notes",
+                description = "Study Kotlin programming concepts",
+                category = "Study",
+                isCompleted = true
+            )
+        )
+    }
+
+    // Calculate task counts automatically
+    val totalTasks = tasks.size
+    val completedTasks = tasks.count { it.isCompleted }
+    val pendingTasks = totalTasks - completedTasks
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -73,24 +106,24 @@ fun HomeScreen() {
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
 
                 SummaryCard(
-                    title = "Total Tasks",
-                    count = "10",
+                    title = "Total",
+                    count = totalTasks,
                     modifier = Modifier.weight(1f)
                 )
 
                 SummaryCard(
                     title = "Pending",
-                    count = "6",
+                    count = pendingTasks,
                     modifier = Modifier.weight(1f)
                 )
 
                 SummaryCard(
                     title = "Completed",
-                    count = "4",
+                    count = completedTasks,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -98,32 +131,29 @@ fun HomeScreen() {
             Spacer(modifier = Modifier.height(28.dp))
 
             Text(
-                text = "Today's Tasks",
+                text = "My Tasks",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            TaskItem(
-                title = "Complete Android Assignment",
-                category = "Assignment",
-                status = "Pending"
-            )
+            // Display all tasks
+            tasks.forEachIndexed { index, task ->
 
-            TaskItem(
-                title = "Study Database Management",
-                category = "Study",
-                status = "Pending"
-            )
+                TaskItem(
+                    task = task,
+                    onCompletionChange = { isCompleted ->
 
-            TaskItem(
-                title = "Review Kotlin Notes",
-                category = "Study",
-                status = "Completed"
-            )
+                        // Update the selected task
+                        tasks[index] = task.copy(
+                            isCompleted = isCompleted
+                        )
+                    }
+                )
+            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             Text(
                 text = "More features will be added as we build the application.",
@@ -137,7 +167,7 @@ fun HomeScreen() {
 @Composable
 fun SummaryCard(
     title: String,
-    count: String,
+    count: Int,
     modifier: Modifier = Modifier
 ) {
 
@@ -157,7 +187,7 @@ fun SummaryCard(
         ) {
 
             Text(
-                text = count,
+                text = count.toString(),
                 fontSize = 25.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -176,9 +206,8 @@ fun SummaryCard(
 
 @Composable
 fun TaskItem(
-    title: String,
-    category: String,
-    status: String
+    task: Task,
+    onCompletionChange: (Boolean) -> Unit
 ) {
 
     Card(
@@ -195,39 +224,45 @@ fun TaskItem(
     ) {
 
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(12.dp)
         ) {
-
-            Text(
-                text = title,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
 
-                Text(
-                    text = category,
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
 
-                Text(
-                    text = status,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (status == "Completed") {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    }
+                    Text(
+                        text = task.title,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        text = task.category,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Checkbox(
+                    checked = task.isCompleted,
+                    onCheckedChange = onCompletionChange
                 )
             }
+
+            Text(
+                text = if (task.isCompleted) "Completed" else "Pending",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
