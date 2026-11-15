@@ -19,6 +19,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -30,9 +31,9 @@ import com.example.exampleproject.data.model.Task
 fun HomeScreen(
     tasks: List<Task>,
     onAddTaskClick: () -> Unit,
+    onEditTaskClick: (Task) -> Unit,
     onCompletionChange: (Int, Boolean) -> Unit
 ) {
-
     val totalTasks = tasks.size
     val completedTasks = tasks.count { it.isCompleted }
     val pendingTasks = totalTasks - completedTasks
@@ -49,7 +50,6 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp)
         ) {
-
             Text(
                 text = "Student Task Manager",
                 fontSize = 26.sp,
@@ -85,7 +85,6 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-
                 SummaryCard(
                     title = "Total",
                     count = totalTasks,
@@ -125,18 +124,17 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             if (tasks.isEmpty()) {
-
                 Text(
                     text = "No tasks available. Add your first task!",
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-
             } else {
-
                 tasks.forEach { task ->
-
                     TaskItem(
                         task = task,
+                        onEditClick = {
+                            onEditTaskClick(task)
+                        },
                         onCompletionChange = { isCompleted ->
                             onCompletionChange(task.id, isCompleted)
                         }
@@ -153,7 +151,6 @@ fun SummaryCard(
     count: Int,
     modifier: Modifier = Modifier
 ) {
-
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
@@ -164,11 +161,9 @@ fun SummaryCard(
             defaultElevation = 2.dp
         )
     ) {
-
         Column(
             modifier = Modifier.padding(12.dp)
         ) {
-
             Text(
                 text = count.toString(),
                 fontSize = 25.sp,
@@ -190,9 +185,9 @@ fun SummaryCard(
 @Composable
 fun TaskItem(
     task: Task,
+    onEditClick: () -> Unit,
     onCompletionChange: (Boolean) -> Unit
 ) {
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -205,20 +200,16 @@ fun TaskItem(
             defaultElevation = 2.dp
         )
     ) {
-
         Column(
             modifier = Modifier.padding(12.dp)
         ) {
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
-
                     Text(
                         text = task.title,
                         fontSize = 16.sp,
@@ -241,15 +232,17 @@ fun TaskItem(
             }
 
             Text(
-                text = if (task.isCompleted) {
-                    "Completed"
-                } else {
-                    "Pending"
-                },
+                text = if (task.isCompleted) "Completed" else "Pending",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            TextButton(
+                onClick = onEditClick
+            ) {
+                Text("Edit")
+            }
         }
     }
 }

@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
 import com.example.exampleproject.data.model.Task
 import com.example.exampleproject.ui.screens.AddTaskScreen
+import com.example.exampleproject.ui.screens.EditTaskScreen
 import com.example.exampleproject.ui.screens.HomeScreen
 import com.example.exampleproject.ui.theme.ExampleProjectTheme
 import java.text.SimpleDateFormat
@@ -24,6 +25,10 @@ class MainActivity : ComponentActivity() {
 
                 var showAddTaskScreen by remember {
                     mutableStateOf(false)
+                }
+
+                var selectedTask by remember {
+                    mutableStateOf<Task?>(null)
                 }
 
                 val tasks = remember {
@@ -50,28 +55,49 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-                if (showAddTaskScreen) {
+                if (selectedTask != null) {
+
+                    val taskToEdit = selectedTask!!
+
+                    EditTaskScreen(
+                        task = taskToEdit,
+
+                        onUpdate = { title, description, category, dueDate ->
+
+                            val parsedDueDate = parseDueDate(dueDate)
+
+                            val index = tasks.indexOfFirst {
+                                it.id == taskToEdit.id
+                            }
+
+                            if (index != -1) {
+                                tasks[index] = tasks[index].copy(
+                                    title = title,
+                                    description = description,
+                                    category = category,
+                                    dueDate = parsedDueDate
+                                )
+                            }
+
+                            selectedTask = null
+                        },
+
+                        onCancel = {
+                            selectedTask = null
+                        }
+                    )
+
+                } else if (showAddTaskScreen) {
 
                     AddTaskScreen(
                         onSave = { title, description, category, dueDate ->
-
-                            val parsedDueDate = if (dueDate.isBlank()) {
-                                null
-                            } else {
-                                runCatching {
-                                    SimpleDateFormat(
-                                        "yyyy-MM-dd",
-                                        Locale.getDefault()
-                                    ).parse(dueDate)?.time
-                                }.getOrNull()
-                            }
 
                             val newTask = Task(
                                 id = (tasks.maxOfOrNull { it.id } ?: 0) + 1,
                                 title = title,
                                 description = description,
                                 category = category,
-                                dueDate = parsedDueDate
+                                dueDate = parseDueDate(dueDate)
                             )
 
                             tasks.add(newTask)
@@ -93,6 +119,10 @@ class MainActivity : ComponentActivity() {
                             showAddTaskScreen = true
                         },
 
+                        onEditTaskClick = { task ->
+                            selectedTask = task
+                        },
+
                         onCompletionChange = { taskId, isCompleted ->
 
                             val index = tasks.indexOfFirst {
@@ -110,5 +140,17 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 
+    private fun parseDueDate(date: String): Long? {
+        if (date.isBlank()) return null
+
+        return runCatching {
+            SimpleDateFormat(
+                "yyyy-MM-dd",
+                Locale.getDefault()
+            ).apply {
+                isLenient = false
+            }.parse(date)?.time
+        }.getOrNull()
+    }
+}
