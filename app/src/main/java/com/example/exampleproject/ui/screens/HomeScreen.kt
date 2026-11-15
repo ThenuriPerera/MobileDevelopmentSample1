@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -19,8 +20,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,34 +27,12 @@ import androidx.compose.ui.unit.sp
 import com.example.exampleproject.data.model.Task
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    tasks: List<Task>,
+    onAddTaskClick: () -> Unit,
+    onCompletionChange: (Int, Boolean) -> Unit
+) {
 
-    // Sample task data
-    val tasks = remember {
-        mutableStateListOf(
-            Task(
-                id = 1,
-                title = "Complete Android Assignment",
-                description = "Finish the mobile development assignment",
-                category = "Assignment"
-            ),
-            Task(
-                id = 2,
-                title = "Study Database Management",
-                description = "Review database lecture notes",
-                category = "Study"
-            ),
-            Task(
-                id = 3,
-                title = "Review Kotlin Notes",
-                description = "Study Kotlin programming concepts",
-                category = "Study",
-                isCompleted = true
-            )
-        )
-    }
-
-    // Calculate task counts automatically
     val totalTasks = tasks.size
     val completedTasks = tasks.count { it.isCompleted }
     val pendingTasks = totalTasks - completedTasks
@@ -128,7 +105,16 @@ fun HomeScreen() {
                 )
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = onAddTaskClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Add New Task")
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 text = "My Tasks",
@@ -138,28 +124,25 @@ fun HomeScreen() {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Display all tasks
-            tasks.forEachIndexed { index, task ->
+            if (tasks.isEmpty()) {
 
-                TaskItem(
-                    task = task,
-                    onCompletionChange = { isCompleted ->
-
-                        // Update the selected task
-                        tasks[index] = task.copy(
-                            isCompleted = isCompleted
-                        )
-                    }
+                Text(
+                    text = "No tasks available. Add your first task!",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+            } else {
+
+                tasks.forEach { task ->
+
+                    TaskItem(
+                        task = task,
+                        onCompletionChange = { isCompleted ->
+                            onCompletionChange(task.id, isCompleted)
+                        }
+                    )
+                }
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text(
-                text = "More features will be added as we build the application.",
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
@@ -258,7 +241,11 @@ fun TaskItem(
             }
 
             Text(
-                text = if (task.isCompleted) "Completed" else "Pending",
+                text = if (task.isCompleted) {
+                    "Completed"
+                } else {
+                    "Pending"
+                },
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
