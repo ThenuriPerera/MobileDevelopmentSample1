@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -21,6 +22,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,6 +37,7 @@ fun HomeScreen(
     tasks: List<Task>,
     onAddTaskClick: () -> Unit,
     onEditTaskClick: (Task) -> Unit,
+    onDeleteTaskClick: (Int) -> Unit,
     onCompletionChange: (Int, Boolean) -> Unit
 ) {
     val totalTasks = tasks.size
@@ -135,6 +141,9 @@ fun HomeScreen(
                         onEditClick = {
                             onEditTaskClick(task)
                         },
+                        onDeleteClick = {
+                            onDeleteTaskClick(task.id)
+                        },
                         onCompletionChange = { isCompleted ->
                             onCompletionChange(task.id, isCompleted)
                         }
@@ -186,8 +195,13 @@ fun SummaryCard(
 fun TaskItem(
     task: Task,
     onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     onCompletionChange: (Boolean) -> Unit
 ) {
+    var showDeleteDialog by remember(task.id) {
+        mutableStateOf(false)
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -232,17 +246,74 @@ fun TaskItem(
             }
 
             Text(
-                text = if (task.isCompleted) "Completed" else "Pending",
+                text = if (task.isCompleted) {
+                    "Completed"
+                } else {
+                    "Pending"
+                },
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            TextButton(
-                onClick = onEditClick
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Edit")
+                TextButton(
+                    onClick = onEditClick
+                ) {
+                    Text("Edit")
+                }
+
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = true
+                    }
+                ) {
+                    Text(
+                        text = "Delete",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteDialog = false
+            },
+            title = {
+                Text("Delete Task?")
+            },
+            text = {
+                Text(
+                    "Are you sure you want to delete \"${task.title}\"?"
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDeleteClick()
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text(
+                        text = "Delete",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

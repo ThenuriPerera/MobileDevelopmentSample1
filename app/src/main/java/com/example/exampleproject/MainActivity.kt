@@ -123,6 +123,10 @@ class MainActivity : ComponentActivity() {
                             selectedTask = task
                         },
 
+                        onDeleteTaskClick = { taskId ->
+                            tasks.removeAll { it.id == taskId }
+                        },
+
                         onCompletionChange = { taskId, isCompleted ->
 
                             val index = tasks.indexOfFirst {
